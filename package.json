@@ -1,0 +1,27 @@
+{
+  "name": "yt-playlist-json-downloader",
+  "version": "1.0.0",
+  "description": "YouTube Playlist JSON Downloader - Fetch video details from any YouTube playlist",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "youtube",
+    "playlist",
+    "json",
+    "downloader",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

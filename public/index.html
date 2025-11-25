@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YouTube Playlist Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto mt-10 max-w-3xl">
+    <div class="bg-white p-8 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">YouTube Playlist Downloader</h2>
+      <form id="playlist-form" class="flex items-center">
+        <input type="text" id="playlistUrl" class="w-full px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Paste YouTube Playlist URL or ID..." required />
+        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-r-md">Fetch</button>
+      </form>
+      <div id="result" class="mt-6"></div>
+      <div class="text-center mt-4">
+        <a href="#" id="downloadJson" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded" style="display:none">Download JSON</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById('playlist-form');
+    const playlistUrlInput = document.getElementById('playlistUrl');
+    const resultDiv = document.getElementById('result');
+    const downloadLink = document.getElementById('downloadJson');
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      resultDiv.innerHTML = '<div class="text-center p-4">Loading...</div>';
+      downloadLink.style.display = 'none';
+
+      const url = `/api/playlist-json?playlistUrl=${encodeURIComponent(playlistUrlInput.value.trim())}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'An error occurred');
+        }
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        let html = `<h3 class="text-xl font-semibold mb-4">Total Videos: ${data.totalVideos}</h3>
+                    <div class="overflow-x-auto">
+                      <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200">
+                          <tr>
+                            <th class="py-2 px-4 border-b">Thumbnail</th>
+                            <th class="py-2 px-4 border-b">Title</th>
+                            <th class="py-2 px-4 border-b">Video ID</th>
+                          </tr>
+                        </thead>
+                        <tbody>`;
+        data.videos.forEach(video => {
+          html += `<tr class="hover:bg-gray-50">
+            <td class="py-2 px-4 border-b text-center"><img src="${video.thumbnailHigh || video.thumbnail || ''}" class="w-24 rounded inline-block" /></td>
+            <td class="py-2 px-4 border-b">${video.title}</td>
+            <td class="py-2 px-4 border-b font-mono">${video.videoId}</td>
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+        resultDiv.innerHTML = html;
+
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], {type:'application/json'});
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = `playlist_${data.playlistId || 'data'}.json`;
+        downloadLink.style.display = 'inline-block';
+      } catch (error) {
+        resultDiv.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                                  <strong class="font-bold">Error:</strong>
+                                  <span class="block sm:inline">${error.message}</span>
+                               </div>`;
+      }
+    }
+  </script>
+</body>
+</html>
